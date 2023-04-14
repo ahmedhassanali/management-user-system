@@ -2,55 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Http\Requests\RoleStoreRequest;
+use App\Http\Requests\RoleUpdateRequest;
+use App\Models\Permission;
 use App\Services\RoleService;
-use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
 
     public function __construct(private RoleService $roleService)
     {
-        
     }
 
     public function index()
     {
         try {
             $roles = $this->roleService->getAll();
-            return view('dashbored.roles.index',compact('$roles'));
+            return view('dashboard.roles.index', compact('roles'));
         } catch (\Exception $e) {
-            // return $this->errorResponse($e->getMessage(), $e->getCode());
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function edit($id)
+    {
+        try {
+            $role = $this->roleService->find($id);
+            return view('dashboard.roles.edit', compact('role'));
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 
     public function create()
     {
-        return view('dashbored.roles.create');
+        try {
+            $permissions = Permission::all();
+            return view('dashboard.roles.create', compact('permissions'));
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
-    public function store(Request $request)
+    public function store(RoleStoreRequest $request)
     {
-        //
+        try {
+            $this->roleService->store($request->validated());
+            return redirect()->route('roles.index')->with('success', 'Role added successfully.');;
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
-    public function show(Role $role)
+    public function update(RoleUpdateRequest $request, $id)
     {
-        //
+        try {
+            $this->roleService->update($request->validated(), $id);
+            return redirect(route('roles.index'))->with('success', 'Role updated successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
-    public function edit(Role $role)
+    public function destroy($id)
     {
-        //
-    }
-
-    public function update(Request $request, Role $role)
-    {
-        //
-    }
-
-    public function destroy(Role $role)
-    {
-        //
+        try {
+            dd($id);
+            $this->roleService->delete($id);
+            return redirect(route('roles.index'))->with('success', 'Role deleted successfully.');;
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }
